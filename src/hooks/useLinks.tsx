@@ -133,19 +133,28 @@ export const useLinks = () => {
   };
 
   const incrementClicks = async (code: string) => {
-    const { error } = await supabase
+    // Primeiro buscar o link atual para obter o número de cliques
+    const { data: currentLink } = await supabase
       .from('links')
-      .update({ clicks: supabase.sql`clicks + 1` })
-      .eq('short_code', code);
+      .select('clicks')
+      .eq('short_code', code)
+      .single();
 
-    if (error) {
-      console.error('Error incrementing clicks:', error);
-    } else {
-      setLinks(prev => prev.map(link => 
-        link.short_code === code 
-          ? { ...link, clicks: link.clicks + 1 }
-          : link
-      ));
+    if (currentLink) {
+      const { error } = await supabase
+        .from('links')
+        .update({ clicks: currentLink.clicks + 1 })
+        .eq('short_code', code);
+
+      if (error) {
+        console.error('Error incrementing clicks:', error);
+      } else {
+        setLinks(prev => prev.map(link => 
+          link.short_code === code 
+            ? { ...link, clicks: link.clicks + 1 }
+            : link
+        ));
+      }
     }
   };
 
