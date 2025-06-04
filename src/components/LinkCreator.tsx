@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useLinks } from '../contexts/LinksContext';
+import { useLinks } from '../hooks/useLinks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,18 +22,22 @@ const LinkCreator: React.FC = () => {
 
     setIsLoading(true);
     
-    // Simular delay de processamento
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const shortCode = addLink(url.trim());
-    setGeneratedCode(shortCode);
-    setUrl('');
+    const shortCode = await addLink(url.trim());
+    if (shortCode) {
+      setGeneratedCode(shortCode);
+      setUrl('');
+      toast({
+        title: "Link criado com sucesso!",
+        description: `Código: ${shortCode}`,
+      });
+    } else {
+      toast({
+        title: "Erro ao criar link",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    }
     setIsLoading(false);
-    
-    toast({
-      title: "Link criado com sucesso!",
-      description: `Código: ${shortCode}`,
-    });
   };
 
   const copyToClipboard = async () => {

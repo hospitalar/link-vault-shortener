@@ -1,17 +1,25 @@
 
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import LinkCreator from './LinkCreator';
 import LinksList from './LinksList';
 import { Button } from '@/components/ui/button';
 import { LogOut, Link, BarChart3 } from 'lucide-react';
-import { useLinks } from '../contexts/LinksContext';
+import { useLinks } from '../hooks/useLinks';
 
 const Dashboard: React.FC = () => {
-  const { logout } = useAuth();
+  const { signOut, user } = useAuth();
   const { links } = useLinks();
 
   const totalClicks = links.reduce((sum, link) => sum + link.clicks, 0);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -24,7 +32,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Gerenciador de Links</h1>
-                <p className="text-sm text-gray-500">Painel Administrativo</p>
+                <p className="text-sm text-gray-500">Bem-vindo, {user.email}</p>
               </div>
             </div>
             
@@ -40,7 +48,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               
-              <Button onClick={logout} variant="outline" size="sm">
+              <Button onClick={handleSignOut} variant="outline" size="sm">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
@@ -50,11 +58,9 @@ const Dashboard: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-8 lg:grid-cols-1 xl:grid-cols-1">
-          <div className="space-y-8">
-            <LinkCreator />
-            <LinksList />
-          </div>
+        <div className="space-y-8">
+          <LinkCreator />
+          <LinksList />
         </div>
       </main>
     </div>

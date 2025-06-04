@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useLinks } from '../contexts/LinksContext';
+import { useLinks } from '../hooks/useLinks';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ExternalLink, ArrowRight } from 'lucide-react';
 
@@ -11,32 +11,49 @@ const RedirectPage: React.FC = () => {
   const [countdown, setCountdown] = useState(3);
   const [link, setLink] = useState<any>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (code) {
-      const foundLink = getLinkByCode(code);
-      if (foundLink) {
-        setLink(foundLink);
-        incrementClicks(code);
-        
-        // Countdown para redirecionamento
-        const timer = setInterval(() => {
-          setCountdown(prev => {
-            if (prev === 1) {
-              clearInterval(timer);
-              window.location.href = foundLink.originalUrl;
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+    const fetchAndRedirect = async () => {
+      if (code) {
+        const foundLink = await getLinkByCode(code);
+        if (foundLink) {
+          setLink(foundLink);
+          await incrementClicks(code);
+          
+          // Countdown para redirecionamento
+          const timer = setInterval(() => {
+            setCountdown(prev => {
+              if (prev === 1) {
+                clearInterval(timer);
+                window.location.href = foundLink.original_url;
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
 
-        return () => clearInterval(timer);
-      } else {
-        setNotFound(true);
+          return () => clearInterval(timer);
+        } else {
+          setNotFound(true);
+        }
       }
-    }
-  }, [code, getLinkByCode, incrementClicks]);
+      setLoading(false);
+    };
+
+    fetchAndRedirect();
+  }, [code]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (notFound) {
     return (
@@ -97,12 +114,12 @@ const RedirectPage: React.FC = () => {
                 {window.location.origin}/{code}
               </span>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <span className="text-blue-600 break-all">{link.originalUrl}</span>
+              <span className="text-blue-600 break-all">{link.original_url}</span>
             </div>
           </div>
 
           <button
-            onClick={() => window.location.href = link.originalUrl}
+            onClick={() => window.location.href = link.original_url}
             className="text-blue-500 hover:text-blue-700 underline text-sm"
           >
             Ir agora
