@@ -12,6 +12,7 @@ const Dashboard: React.FC = () => {
   const { links } = useLinks();
 
   const totalClicks = links.reduce((sum, link) => sum + link.clicks, 0);
+  const activeLinks = links.filter(link => !link.is_removed);
 
   const handleSignOut = async () => {
     await signOut();
@@ -40,7 +41,7 @@ const Dashboard: React.FC = () => {
               <div className="hidden sm:flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Link className="w-4 h-4" />
-                  <span>{links.length} links</span>
+                  <span>{activeLinks.length} links ativos</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />

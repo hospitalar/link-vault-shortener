@@ -123,6 +123,7 @@ export const useLinks = () => {
       .select('*')
       .eq('short_code', code)
       .eq('is_deleted', false)
+      .eq('is_removed', false)
       .single();
 
     if (error || !data) {
@@ -133,7 +134,6 @@ export const useLinks = () => {
   };
 
   const incrementClicks = async (code: string) => {
-    // Primeiro buscar o link atual para obter o número de cliques
     const { data: currentLink } = await supabase
       .from('links')
       .select('clicks')
@@ -159,7 +159,7 @@ export const useLinks = () => {
   };
 
   return {
-    links: links.filter(link => !link.is_removed),
+    links,
     loading,
     addLink,
     removeLink,

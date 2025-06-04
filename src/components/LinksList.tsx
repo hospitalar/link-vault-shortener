@@ -4,7 +4,7 @@ import { useLinks } from '../hooks/useLinks';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, ExternalLink, Copy, Eye, Calendar } from 'lucide-react';
+import { Trash2, ExternalLink, Copy, Eye, Calendar, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const LinksList: React.FC = () => {
@@ -77,7 +77,7 @@ const LinksList: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-gray-800">
           <ExternalLink className="w-5 h-5" />
-          Links Ativos ({links.length})
+          Links ({links.length})
         </CardTitle>
         <CardDescription>
           Gerencie todos os seus links encurtados
@@ -90,7 +90,7 @@ const LinksList: React.FC = () => {
               key={link.id} 
               className={`p-6 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
                 index === links.length - 1 ? 'border-b-0' : ''
-              }`}
+              } ${link.is_removed ? 'bg-red-50 opacity-75' : ''}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -98,6 +98,12 @@ const LinksList: React.FC = () => {
                     <Badge variant="secondary" className="font-mono text-sm">
                       /{link.short_code}
                     </Badge>
+                    {link.is_removed && (
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Removido
+                      </Badge>
+                    )}
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Eye className="w-4 h-4" />
                       <span>{link.clicks} cliques</span>
@@ -117,32 +123,36 @@ const LinksList: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    onClick={() => copyToClipboard(link.short_code)}
-                    size="sm"
-                    variant="outline"
-                    className="h-8"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                  
-                  <Button
-                    onClick={() => window.open(link.original_url, '_blank')}
-                    size="sm"
-                    variant="outline"
-                    className="h-8"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handleRemove(link.id, link.short_code)}
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                  >
-                    Remover
-                  </Button>
+                  {!link.is_removed && (
+                    <>
+                      <Button
+                        onClick={() => copyToClipboard(link.short_code)}
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                      
+                      <Button
+                        onClick={() => window.open(link.original_url, '_blank')}
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                      
+                      <Button
+                        onClick={() => handleRemove(link.id, link.short_code)}
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      >
+                        Remover
+                      </Button>
+                    </>
+                  )}
                   
                   <Button
                     onClick={() => handleDelete(link.id, link.short_code)}
