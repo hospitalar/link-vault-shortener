@@ -32,7 +32,10 @@ const Dashboard: React.FC = () => {
                 <Link className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Gerenciador de Links</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold text-gray-900">Gerenciador de Links</h1>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">Beta</span>
+                </div>
                 <p className="text-sm text-gray-500">Bem-vindo, {user.email}</p>
               </div>
             </div>

@@ -24,38 +24,47 @@ const RedirectPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const getLinkByCode = async (shortCode: string): Promise<Link | null> => {
-    const { data, error } = await supabase
-      .from('links')
-      .select('*')
-      .eq('short_code', shortCode)
-      .eq('is_deleted', false)
-      .eq('is_removed', false)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('links')
+        .select('*')
+        .eq('short_code', shortCode)
+        .eq('is_deleted', false)
+        .eq('is_removed', false)
+        .single();
 
-    if (error || !data) {
+      if (error || !data) {
+        console.error('Error fetching link:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
       console.error('Error fetching link:', error);
       return null;
     }
-
-    return data;
   };
 
   const incrementClicks = async (shortCode: string) => {
-    const { data: currentLink } = await supabase
-      .from('links')
-      .select('clicks')
-      .eq('short_code', shortCode)
-      .single();
-
-    if (currentLink) {
-      const { error } = await supabase
+    try {
+      const { data: currentLink } = await supabase
         .from('links')
-        .update({ clicks: currentLink.clicks + 1 })
-        .eq('short_code', shortCode);
+        .select('clicks')
+        .eq('short_code', shortCode)
+        .single();
 
-      if (error) {
-        console.error('Error incrementing clicks:', error);
+      if (currentLink) {
+        const { error } = await supabase
+          .from('links')
+          .update({ clicks: currentLink.clicks + 1 })
+          .eq('short_code', shortCode);
+
+        if (error) {
+          console.error('Error incrementing clicks:', error);
+        }
       }
+    } catch (error) {
+      console.error('Error incrementing clicks:', error);
     }
   };
 
