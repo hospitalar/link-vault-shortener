@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface Link {
   id: string;
@@ -23,9 +23,6 @@ const PREDEFINED_LINKS: Record<string, string> = {
 
 const RedirectPage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
-  const [countdown, setCountdown] = useState(3);
-  const [link, setLink] = useState<Link | null>(null);
-  const [predefinedUrl, setPredefinedUrl] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -82,23 +79,9 @@ const RedirectPage: React.FC = () => {
         // Verificar primeiro se é um link predefinido
         if (PREDEFINED_LINKS[code]) {
           console.log('Predefined link found:', PREDEFINED_LINKS[code]);
-          setPredefinedUrl(PREDEFINED_LINKS[code]);
-          
-          // Countdown para redirecionamento
-          const timer = setInterval(() => {
-            setCountdown(prev => {
-              if (prev === 1) {
-                clearInterval(timer);
-                console.log('Redirecting to predefined URL:', PREDEFINED_LINKS[code]);
-                window.location.href = PREDEFINED_LINKS[code];
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-
-          setLoading(false);
-          return () => clearInterval(timer);
+          console.log('Redirecting to predefined URL:', PREDEFINED_LINKS[code]);
+          window.location.href = PREDEFINED_LINKS[code];
+          return;
         }
         
         // Se não é predefinido, buscar no banco de dados
@@ -106,23 +89,10 @@ const RedirectPage: React.FC = () => {
         
         if (foundLink) {
           console.log('Link found:', foundLink);
-          setLink(foundLink);
           await incrementClicks(code);
-          
-          // Countdown para redirecionamento
-          const timer = setInterval(() => {
-            setCountdown(prev => {
-              if (prev === 1) {
-                clearInterval(timer);
-                console.log('Redirecting to:', foundLink.original_url);
-                window.location.href = foundLink.original_url;
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-
-          return () => clearInterval(timer);
+          console.log('Redirecting to:', foundLink.original_url);
+          window.location.href = foundLink.original_url;
+          return;
         } else {
           console.log('Link not found for code:', code);
           setNotFound(true);
@@ -139,7 +109,7 @@ const RedirectPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <p className="text-gray-600">Redirecionando...</p>
         </div>
       </div>
     );
@@ -169,57 +139,7 @@ const RedirectPage: React.FC = () => {
     );
   }
 
-  const targetUrl = predefinedUrl || link?.original_url;
-
-  if (!targetUrl) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardContent className="text-center py-12">
-          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-            <ExternalLink className="w-8 h-8 text-blue-500" />
-          </div>
-          
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Redirecionando...</h1>
-          
-          <div className="mb-6">
-            <div className="text-6xl font-bold text-blue-500 mb-2">
-              {countdown}
-            </div>
-            <p className="text-gray-600">segundos</p>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-500 mb-2">Você será redirecionado para:</p>
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <span className="font-mono bg-white px-2 py-1 rounded border">
-                {window.location.origin}/{code}
-              </span>
-              <ArrowRight className="w-4 h-4 text-gray-400" />
-              <span className="text-blue-600 break-all">{targetUrl}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => window.location.href = targetUrl}
-            className="text-blue-500 hover:text-blue-700 underline text-sm"
-          >
-            Ir agora
-          </button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return null;
 };
 
 export default RedirectPage;
