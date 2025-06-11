@@ -1,23 +1,72 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useLinks } from '../hooks/useLinks';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ExternalLink, ArrowRight } from 'lucide-react';
 
+interface Link {
+  id: string;
+  user_id: string;
+  original_url: string;
+  short_code: string;
+  clicks: number;
+  created_at: string;
+  is_removed: boolean;
+  is_deleted: boolean;
+}
+
 const RedirectPage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
-  const { getLinkByCode, incrementClicks } = useLinks();
   const [countdown, setCountdown] = useState(3);
-  const [link, setLink] = useState<any>(null);
+  const [link, setLink] = useState<Link | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const getLinkByCode = async (shortCode: string): Promise<Link | null> => {
+    const { data, error } = await supabase
+      .from('links')
+      .select('*')
+      .eq('short_code', shortCode)
+      .eq('is_deleted', false)
+      .eq('is_removed', false)
+      .single();
+
+    if (error || !data) {
+      console.error('Error fetching link:', error);
+      return null;
+    }
+
+    return data;
+  };
+
+  const incrementClicks = async (shortCode: string) => {
+    const { data: currentLink } = await supabase
+      .from('links')
+      .select('clicks')
+      .eq('short_code', shortCode)
+      .single();
+
+    if (currentLink) {
+      const { error } = await supabase
+        .from('links')
+        .update({ clicks: currentLink.clicks + 1 })
+        .eq('short_code', shortCode);
+
+      if (error) {
+        console.error('Error incrementing clicks:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchAndRedirect = async () => {
       if (code) {
+        console.log('Fetching link for code:', code);
         const foundLink = await getLinkByCode(code);
+        
         if (foundLink) {
+          console.log('Link found:', foundLink);
           setLink(foundLink);
           await incrementClicks(code);
           
@@ -26,6 +75,7 @@ const RedirectPage: React.FC = () => {
             setCountdown(prev => {
               if (prev === 1) {
                 clearInterval(timer);
+                console.log('Redirecting to:', foundLink.original_url);
                 window.location.href = foundLink.original_url;
                 return 0;
               }
@@ -35,6 +85,7 @@ const RedirectPage: React.FC = () => {
 
           return () => clearInterval(timer);
         } else {
+          console.log('Link not found for code:', code);
           setNotFound(true);
         }
       }
