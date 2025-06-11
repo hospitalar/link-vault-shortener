@@ -16,10 +16,16 @@ interface Link {
   is_deleted: boolean;
 }
 
+// Configuração de links padronizados
+const PREDEFINED_LINKS: Record<string, string> = {
+  'l6Jik': 'https://www.joinsecret.com/pt?r=faa6d9e759de'
+};
+
 const RedirectPage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const [countdown, setCountdown] = useState(3);
   const [link, setLink] = useState<Link | null>(null);
+  const [predefinedUrl, setPredefinedUrl] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -72,6 +78,30 @@ const RedirectPage: React.FC = () => {
     const fetchAndRedirect = async () => {
       if (code) {
         console.log('Fetching link for code:', code);
+        
+        // Verificar primeiro se é um link predefinido
+        if (PREDEFINED_LINKS[code]) {
+          console.log('Predefined link found:', PREDEFINED_LINKS[code]);
+          setPredefinedUrl(PREDEFINED_LINKS[code]);
+          
+          // Countdown para redirecionamento
+          const timer = setInterval(() => {
+            setCountdown(prev => {
+              if (prev === 1) {
+                clearInterval(timer);
+                console.log('Redirecting to predefined URL:', PREDEFINED_LINKS[code]);
+                window.location.href = PREDEFINED_LINKS[code];
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+
+          setLoading(false);
+          return () => clearInterval(timer);
+        }
+        
+        // Se não é predefinido, buscar no banco de dados
         const foundLink = await getLinkByCode(code);
         
         if (foundLink) {
@@ -139,7 +169,9 @@ const RedirectPage: React.FC = () => {
     );
   }
 
-  if (!link) {
+  const targetUrl = predefinedUrl || link?.original_url;
+
+  if (!targetUrl) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
@@ -174,12 +206,12 @@ const RedirectPage: React.FC = () => {
                 {window.location.origin}/{code}
               </span>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <span className="text-blue-600 break-all">{link.original_url}</span>
+              <span className="text-blue-600 break-all">{targetUrl}</span>
             </div>
           </div>
 
           <button
-            onClick={() => window.location.href = link.original_url}
+            onClick={() => window.location.href = targetUrl}
             className="text-blue-500 hover:text-blue-700 underline text-sm"
           >
             Ir agora
